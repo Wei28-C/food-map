@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的吃吃手帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EE; --paper:#FBFCFA; --ink:#1F2B29; --muted:#5E6B68; --line:#D5DDD8;
+  --teal:#1F6F66; --teal-soft:#DCEBE7; --yolk:#F2B632;
+  --t-daily:#2E7D4F; --t-daily-bg:#E1F0E5;
+  --t-snack:#B4467A; --t-snack-bg:#F6E1EB;
+  --t-rest:#3B4FA0; --t-rest-bg:#E2E6F6;
+  --danger:#B23A3A;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A19; --paper:#1C2322; --ink:#E6ECEA; --muted:#9AA8A4; --line:#2E3836;
+    --teal:#5FC0B3; --teal-soft:#1F3431; --yolk:#E8B64A;
+    --t-daily:#7CCB98; --t-daily-bg:#1F3326;
+    --t-snack:#EE9CC3; --t-snack-bg:#3A2330;
+    --t-rest:#A3B2F0; --t-rest-bg:#252B45;
+    --danger:#F08A8A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A19; --paper:#1C2322; --ink:#E6ECEA; --muted:#9AA8A4; --line:#2E3836;
+  --teal:#5FC0B3; --teal-soft:#1F3431; --yolk:#E8B64A;
+  --t-daily:#7CCB98; --t-daily-bg:#1F3326;
+  --t-snack:#EE9CC3; --t-snack-bg:#3A2330;
+  --t-rest:#A3B2F0; --t-rest-bg:#252B45;
+  --danger:#F08A8A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-family:"LXGW WenKai TC","Kaiti TC","KaiTi",serif;font-weight:700;
+  font-size:2rem;line-height:1.2;margin:8px 0 4px;letter-spacing:.02em}
+.sub{color:var(--muted);margin:0 0 20px;font-size:.95rem}
+.paste{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:14px}
+.paste:focus-within{border-color:var(--teal)}
+textarea,input,select{font:inherit;color:var(--ink);background:transparent}
+.paste textarea{width:100%;border:0;outline:0;resize:vertical;min-height:64px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.paste .row{justify-content:space-between;margin-top:6px}
+.hint{font-size:.85rem;color:var(--muted)}
+button{font:inherit;cursor:pointer;border-radius:999px;border:1.5px solid transparent;padding:8px 18px;font-weight:500}
+.btn-main{background:var(--teal);color:var(--paper)}
+.btn-main:disabled{opacity:.55;cursor:default}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-danger{background:transparent;color:var(--danger);border-color:transparent;padding:8px 10px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--yolk);outline-offset:2px}
+
+.form{margin-top:14px;background:var(--paper);border-radius:18px;padding:16px;border:1.5px solid var(--teal);display:none}
+.form.show{display:block}
+.form h2{font-family:"LXGW WenKai TC",serif;font-size:1.25rem;margin:0 0 10px}
+.status{font-size:.9rem;color:var(--muted);margin:-4px 0 12px;min-height:1.4em}
+.status.warn{color:var(--danger)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--bg)}
+.field textarea{min-height:70px;resize:vertical}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:7px 14px;border-color:var(--line);background:var(--bg);color:var(--ink)}
+.seg button[aria-pressed="true"][data-v="日常吃"]{background:var(--t-daily-bg);border-color:var(--t-daily);color:var(--t-daily)}
+.seg button[aria-pressed="true"][data-v="點心"]{background:var(--t-snack-bg);border-color:var(--t-snack);color:var(--t-snack)}
+.seg button[aria-pressed="true"][data-v="餐廳"]{background:var(--t-rest-bg);border-color:var(--t-rest);color:var(--t-rest)}
+.seg button[aria-pressed="true"][data-v="想去"]{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+.seg button[aria-pressed="true"][data-v="去過"]{background:var(--yolk);border-color:var(--yolk);color:#1F2B29}
+.tag.visit-想去{background:transparent;border:1px solid var(--teal);color:var(--teal)}
+.tag.visit-去過{background:var(--yolk);color:#1F2B29}
+.item.been .name::after{content:" ✓";color:var(--yolk)}
+.form .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+
+.bar{margin:28px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.bar h2{font-family:"LXGW WenKai TC",serif;font-size:1.4rem;margin:0}
+.count{color:var(--muted);font-size:.9rem}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;background:var(--paper)}
+.filters input{flex:1 1 160px;min-width:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chips button{padding:5px 14px;border-color:var(--line);background:var(--paper);color:var(--muted);font-size:.9rem}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+.list{list-style:none;margin:0;padding:0}
+.item{display:flex;gap:12px;padding:14px 4px;border-bottom:1px dashed var(--line);align-items:flex-start}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:9px}
+.dot.日常吃{background:var(--t-daily)} .dot.點心{background:var(--t-snack)} .dot.餐廳{background:var(--t-rest)}
+.item .body{flex:1;min-width:0}
+.item .name{font-weight:700;font-size:1.05rem;word-break:break-word}
+.item .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:.8rem;padding:1px 10px;border-radius:999px;background:var(--teal-soft);color:var(--teal)}
+.tag.type-日常吃{background:var(--t-daily-bg);color:var(--t-daily)}
+.tag.type-點心{background:var(--t-snack-bg);color:var(--t-snack)}
+.tag.type-餐廳{background:var(--t-rest-bg);color:var(--t-rest)}
+.item .note{color:var(--muted);font-size:.92rem;margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.item .ops{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex:none}
+.item .ops a,.item .ops button{font-size:.85rem;color:var(--teal);text-decoration:none;background:none;border:0;padding:2px 4px}
+.empty{padding:36px 12px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:18px}
+.foot{margin-top:28px;font-size:.8rem;color:var(--muted);text-align:center}
+body.readonly .paste, body.readonly .form, body.readonly [data-act], body.readonly #importBtn{display:none!important}
+.authbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);min-height:36px}
+.authbar button{font-size:.85rem;padding:6px 14px}
+body.signedout .paste, body.signedout .form, body.signedout [data-act], body.signedout #importBtn{display:none!important}
+.tools{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.tools button{font-size:.85rem;padding:6px 14px}
+.viewseg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden}
+.viewseg button{border:0;border-radius:0;padding:4px 12px;font-size:.85rem;background:var(--paper);color:var(--muted)}
+.viewseg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.tablewrap{overflow-x:auto;background:var(--paper);border:1.5px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:.8rem;white-space:nowrap;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.nm{font-weight:700;min-width:120px}
+td.nt{color:var(--muted);max-width:220px;white-space:pre-wrap;word-break:break-word}
+td.op{white-space:nowrap}
+td.op a,td.op button{font-size:.82rem;color:var(--teal);text-decoration:none;background:none;border:0;padding:2px 4px}
+tr.been td.nm::after{content:" ✓";color:var(--yolk)}
+@media (max-width:480px){.grid{grid-template-columns:1fr}h1{font-size:1.7rem}}
+@media (prefers-reduced-motion:no-preference){.form.show{animation:pop .18s ease-out}@keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="authbar"><span id="who"></span><button class="btn-ghost" id="authBtn" type="button" hidden>用 Google 登入</button></div>
+  <h1>我的吃吃手帳</h1>
+  <p class="sub">把 Google 地圖的店家分享連結貼進來，自動幫你整理好。</p>
+
+  <div class="paste">
+    <textarea id="pasteBox" placeholder="貼上 Google 地圖網址或分享文字…" aria-label="Google 地圖網址"></textarea>
+    <div class="row">
+      <span class="hint" id="aiHint">會依店名與地址自動判斷縣市、類型與料理</span>
+      <button class="btn-main" id="detectBtn">辨識</button>
+    </div>
+  </div>
+
+  <div class="form" id="form" aria-live="polite">
+    <h2 id="formTitle">新增店家</h2>
+    <p class="status" id="status"></p>
+    <div class="grid">
+      <div class="field full"><label for="fName">店名</label><input id="fName" autocomplete="off"></div>
+      <div class="field"><label for="fCity">縣市</label><input id="fCity" list="cityList" autocomplete="off" placeholder="例如：台北市"></div>
+      <div class="field"><label for="fCuisine">國家／地區</label><input id="fCuisine" list="cuisineList" autocomplete="off" placeholder="例如：日式"></div>
+      <div class="field full"><label>類型</label>
+        <div class="seg" id="typeSeg">
+          <button type="button" data-v="日常吃" aria-pressed="false">日常吃</button>
+          <button type="button" data-v="點心" aria-pressed="false">點心</button>
+          <button type="button" data-v="餐廳" aria-pressed="false">餐廳</button>
+        </div>
+      </div>
+      <div class="field full"><label>狀態</label>
+        <div class="seg" id="visitSeg">
+          <button type="button" data-v="想去" aria-pressed="true">想去</button>
+          <button type="button" data-v="去過" aria-pressed="false">去過</button>
+        </div>
+      </div>
+      <div class="field full"><label for="fUrl">地圖連結</label><input id="fUrl" type="url" inputmode="url" autocomplete="off" placeholder="沒有的話會用店名自動產生搜尋連結"></div>
+      <div class="field full"><label for="fNote">備註</label><textarea id="fNote" placeholder="必點、營業時間、誰推薦的…"></textarea></div>
+    </div>
+    <div class="actions">
+      <button class="btn-ghost" id="cancelBtn" type="button">取消</button>
+      <button class="btn-main" id="saveBtn" type="button">儲存</button>
+    </div>
+  </div>
+
+  <div class="bar"><h2>收藏的店</h2><span class="row"><span class="count" id="count"></span><span class="viewseg" id="viewSeg"><button data-v="table" aria-pressed="true">清單</button><button data-v="cards" aria-pressed="false">卡片</button></span></span></div>
+  <div class="filters">
+    <input id="q" type="search" placeholder="搜尋店名或備註" aria-label="搜尋">
+    <select id="fCityFilter" aria-label="縣市篩選"><option value="">全部縣市</option></select>
+    <select id="fCuisineFilter" aria-label="料理篩選"><option value="">全部料理</option></select>
+  </div>
+  <div class="chips" id="typeChips">
+    <button data-v="" aria-pressed="true">全部</button>
+    <button data-v="日常吃" aria-pressed="false">日常吃</button>
+    <button data-v="點心" aria-pressed="false">點心</button>
+    <button data-v="餐廳" aria-pressed="false">餐廳</button>
+  </div>
+  <div class="chips" id="visitChips">
+    <button data-v="" aria-pressed="true">都顯示</button>
+    <button data-v="想去" aria-pressed="false">想去</button>
+    <button data-v="去過" aria-pressed="false">去過</button>
+  </div>
+  <div id="list"></div>
+  <p class="foot" id="foot">載入中…</p>
+  <div class="tools">
+    <button class="btn-ghost" id="exportBtn" type="button">匯出備份</button>
+    <button class="btn-ghost" id="importBtn" type="button">匯入備份</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
+</div>
+
+<datalist id="cityList"></datalist>
+<datalist id="cuisineList">
+  <option value="台式"><option value="日式"><option value="韓式"><option value="中式"><option value="港式">
+  <option value="泰式"><option value="越式"><option value="義式"><option value="法式"><option value="美式">
+  <option value="墨西哥"><option value="印度"><option value="西班牙"><option value="其他">
+</datalist>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDAYOAdd0_WdDeLGGgQQAWRpFHeaFsDgi8",
+  authDomain: "food-map-9f70e.firebaseapp.com",
+  projectId: "food-map-9f70e",
+  storageBucket: "food-map-9f70e.firebasestorage.app",
+  messagingSenderId: "116796075808",
+  appId: "1:116796075808:web:9cdc4f2c8ed2f4ccc5b145"
+};
+const fbApp = initializeApp(firebaseConfig);
+const fdb = getFirestore(fbApp);
+const fauth = getAuth(fbApp);
+(() => {
+  const TYPES = ["日常吃","點心","餐廳"];
+  const $ = id => document.getElementById(id);
+  let items = [];              // [{id, name, city, type, cuisine, note, url, lat, lng, createdAt}]
+  let editingId = null;
+  let current = {url:"", lat:null, lng:null};
+  let filterType = "";
+  let filterVisit = "";
+  let sample = null;
+  let store = null;
+
+  /* ---------- storage: private db per user, localStorage fallback ---------- */
+  const LS_KEY = "foodmap.items.v1";
+  const lsStore = {
+    mode:"local",
+    start(cb){ try{ items = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }catch(e){ items = []; } cb(); },
+    persist(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(items)); }catch(e){} },
+    async save(it){ const i = items.findIndex(x=>x.id===it.id); if(i>=0) items[i]=it; else items.unshift(it); this.persist(); render(); },
+    async remove(id){ items = items.filter(x=>x.id!==id); this.persist(); render(); }
+  };
+
+  let readOnly = true;
+  function initStore(){
+    const col = collection(fdb, "places");
+    store = {
+      mode:"cloud",
+      start(cb){
+        onSnapshot(col, snap => {
+          items = snap.docs.map(d => ({id:d.id, ...d.data()}))
+            .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+          cb();
+        }, () => { $("foot").textContent = "讀取資料失敗，請重新整理頁面。"; });
+      },
+      async save(it){
+        const {id, ...rest} = it;
+        try{ await setDoc(doc(fdb, "places", id), rest); }
+        catch(e){ if (e.code === "permission-denied") noPermission(); throw e; }
+      },
+      async remove(id){
+        try{ await deleteDoc(doc(fdb, "places", id)); }
+        catch(e){ if (e.code === "permission-denied") noPermission(); throw e; }
+      }
+    };
+    store.start(render);
+    $("foot").textContent = "這份清單是共用的，新增或修改會即時同步到每個人的畫面。";
+
+    const btn = $("authBtn");
+    btn.hidden = false;
+    onAuthStateChanged(fauth, user => {
+      readOnly = !user;
+      document.body.classList.toggle("signedout", !user);
+      $("who").textContent = user ? (user.email || "") : "登入後才能新增或修改";
+      btn.textContent = user ? "登出" : "用 Google 登入";
+    });
+    btn.onclick = async () => {
+      if (fauth.currentUser){ await signOut(fauth); return; }
+      const provider = new GoogleAuthProvider();
+      try{ await signInWithPopup(fauth, provider); }
+      catch(e){
+        if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") signInWithRedirect(fauth, provider);
+        else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") alert("登入失敗：" + e.code);
+      }
+    };
+  }
+  function noPermission(){
+    alert("這個帳號沒有編輯權限。請請清單擁有者把你的信箱加進 Firebase 安全規則。");
+  }
+
+  async function initSample(){ sample = null; }
+
+  /* ---------- URL parsing ---------- */
+  function extractUrl(text){
+    const m = text.match(/https?:\/\/[^\s]+/);
+    return m ? m[0].replace(/[)\]>,，。]+$/,"") : "";
+  }
+  function parseMapsUrl(url){
+    const out = {name:"", lat:null, lng:null, short:false};
+    if (!url) return out;
+    out.short = /goo\.gl|maps\.app|share\.google|g\.co\//.test(url);
+    const place = url.match(/\/maps\/place\/([^\/@?]+)/);
+    if (place){
+      try{ out.name = decodeURIComponent(place[1].replace(/\+/g," ")); }catch(e){ out.name = place[1]; }
+    }
+    if (!out.name){
+      const q = url.match(/[?&]q=([^&]+)/);
+      if (q){ try{ const v = decodeURIComponent(q[1].replace(/\+/g," ")); if(!/^-?\d/.test(v)) out.name = v; }catch(e){} }
+    }
+    const d = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (d){ out.lat = +d[1]; out.lng = +d[2]; }
+    return out;
+  }
+
+  /* ---------- form ---------- */
+  function setType(v){
+    $("typeSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+  }
+  function getType(){
+    const b = $("typeSeg").querySelector('button[aria-pressed="true"]');
+    return b ? b.dataset.v : "";
+  }
+  function setVisit(v){
+    $("visitSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+  }
+  function getVisit(){
+    const b = $("visitSeg").querySelector('button[aria-pressed="true"]');
+    return b ? b.dataset.v : "想去";
+  }
+  $("visitSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setVisit(b.dataset.v); });
+  function openForm(data, title){
+    $("formTitle").textContent = title;
+    $("fName").value = data.name || "";
+    $("fCity").value = data.city || "";
+    $("fCuisine").value = data.cuisine || "";
+    $("fNote").value = data.note || "";
+    $("fUrl").value = data.url || "";
+    setType(data.type || "");
+    setVisit(data.visit || "想去");
+    $("form").classList.add("show");
+  }
+  function closeForm(){
+    $("form").classList.remove("show");
+    editingId = null; current = {url:"", lat:null, lng:null};
+    setStatus("");
+  }
+  function setStatus(t, warn){ const s=$("status"); s.textContent=t; s.classList.toggle("warn", !!warn); }
+
+  $("typeSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setType(b.dataset.v); });
+  $("cancelBtn").onclick = closeForm;
+
+  /* ---------- detect ---------- */
+  $("pasteBox").addEventListener("paste", e => {
+    const cd = e.clipboardData; if (!cd) return;
+    const plain = cd.getData("text/plain") || "";
+    if (/https?:\/\//.test(plain)) return;
+    let link = (cd.getData("text/uri-list") || "").split(/\r?\n/).find(l => /^https?:/.test(l)) || "";
+    if (!link){
+      const html = cd.getData("text/html") || "";
+      const m = html.match(/href=["'](https?:[^"']+)["']/i);
+      if (m) link = m[1].replace(/&amp;/g,"&");
+    }
+    if (link){
+      e.preventDefault();
+      const ta = $("pasteBox");
+      const text = (plain ? plain.trim() + "\n" : "") + link;
+      const st = ta.selectionStart, en = ta.selectionEnd;
+      ta.value = ta.value.slice(0, st) + text + ta.value.slice(en);
+    }
+  });
+
+  function mapLink(x){
+    if (x.url) return x.url;
+    if (x.lat != null && x.lng != null) return "https://www.google.com/maps/search/?api=1&query=" + x.lat + "," + x.lng;
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([x.name, x.city].filter(Boolean).join(" "));
+  }
+
+  let ctl = null;
+  $("detectBtn").onclick = async () => {
+    const raw = $("pasteBox").value.trim();
+    if (!raw){ $("pasteBox").focus(); return; }
+    const url = extractUrl(raw);
+    const p = parseMapsUrl(url);
+    const textWithoutUrl = raw.replace(url, "").trim();
+    editingId = null;
+    current = {url: url || "", lat:p.lat, lng:p.lng};
+
+    const dup = url && items.find(x => x.url === url);
+    openForm({name: p.name || textWithoutUrl.split(/\n/)[0].slice(0,60), url: url || ""}, "新增店家");
+    applyLocal(raw + " " + $("fName").value);
+    if (dup) setStatus("這家店已經收藏過了（" + dup.name + "），儲存會新增一筆。", true);
+
+    if (!sample){
+      if (p.short && !p.name && !textWithoutUrl) setStatus("短網址讀不到店名，請手動填入，或在瀏覽器打開後複製完整網址。", true);
+      else if (!dup){ const m = missingFields(); setStatus(m.length ? "判斷不出" + m.join("、") + "，請手動補上。" : "已自動填入，有不對的地方可以直接改。", m.length>0); }
+      return;
+    }
+    if (p.short && !p.name && !textWithoutUrl){
+      setStatus("短網址裡沒有店名，無法辨識。請手動填入店名後按「重新辨識」，或貼上含店名的分享文字。", true);
+      showRedetect(true);
+      return;
+    }
+    await runDetect({raw, url, parsed:p});
+  };
+
+  function showRedetect(on){
+    let b = $("redetect");
+    if (on && !b){
+      b = document.createElement("button");
+      b.id = "redetect"; b.className = "btn-ghost"; b.type = "button"; b.textContent = "重新辨識";
+      b.onclick = () => runDetect({raw:$("fName").value, url:current.url, parsed:{name:$("fName").value, lat:current.lat, lng:current.lng}});
+      $("cancelBtn").before(b);
+    }
+    if (!on && b) b.remove();
+  }
+
+  /* ---------- local guesses (work even without AI) ---------- */
+  const TW = ["台北市","新北市","桃園市","台中市","台南市","高雄市","基隆市","新竹市","嘉義市","新竹縣","苗栗縣","彰化縣","南投縣","雲林縣","嘉義縣","屏東縣","宜蘭縣","花蓮縣","台東縣","澎湖縣","金門縣","連江縣"];
+  const ABROAD = [["東京","東京"],["Tokyo","東京"],["大阪","大阪"],["Osaka","大阪"],["京都","京都"],["Kyoto","京都"],["福岡","福岡"],["北海道","北海道"],["札幌","札幌"],["沖繩","沖繩"],["名古屋","名古屋"],["首爾","首爾"],["서울","首爾"],["Seoul","首爾"],["釜山","釜山"],["香港","香港"],["Hong Kong","香港"],["澳門","澳門"],["曼谷","曼谷"],["Bangkok","曼谷"],["新加坡","新加坡"],["Singapore","新加坡"],["上海","上海"],["北京","北京"]];
+  const CUISINE_KW = [
+    ["日式",/拉麵|ラーメン|壽司|寿司|丼|燒肉|焼肉|居酒屋|烏龍|うどん|蕎麥|そば|天婦羅|定食|鰻|咖哩飯|日式|和食|割烹|串燒|燒鳥|焼鳥|大阪燒|章魚燒|抹茶|ramen|sushi|izakaya/i],
+    ["韓式",/韓式|韓國|炸雞|部隊鍋|石鍋|拌飯|烤肉.*韓|豆腐鍋|korean/i],
+    ["義式",/義式|義大利|披薩|pizz|pasta|trattoria|osteria|ristorante|gelato/i],
+    ["泰式",/泰式|泰國|打拋|綠咖哩|thai/i],
+    ["越式",/越式|越南|河粉|法國麵包.*越|pho|banh/i],
+    ["港式",/港式|茶餐廳|燒臘|點心|飲茶|菠蘿油|冰室/],
+    ["美式",/美式|漢堡|burger|牛排館|steakhouse|bbq|diner/i],
+    ["法式",/法式|法國|bistro|brasserie|可頌|croissant/i],
+    ["印度",/印度|india|naan|tandoor/i],
+    ["墨西哥",/墨西哥|taco|burrito/i],
+    ["台式",/台式|滷肉飯|魯肉飯|肉圓|牛肉麵|小籠包|鹹酥雞|雞排|豆花|刈包|蚵仔|臭豆腐|鍋貼|水煎包|便當|自助餐|快炒|熱炒|米粉|粥|豆漿|早餐店|古早味|夜市|麵線|爌肉/],
+    ["中式",/川菜|湘菜|麻辣|火鍋|江浙|上海菜|北京烤鴨|粵菜|中菜|中式/]
+  ];
+  const TYPE_KW = [
+    ["點心",/咖啡|cafe|café|coffee|甜點|甜品|蛋糕|麵包|烘焙|bakery|冰|豆花|茶飲|手搖|飲料|下午茶|鬆餅|布丁|甜甜圈|dessert|gelato|可頌/i],
+    ["日常吃",/便當|自助餐|麵店|小吃|早餐|滷肉飯|魯肉飯|牛肉麵|拉麵|丼|定食|鍋貼|水煎包|雞排|快餐|粥|米粉|夜市/]
+  ];
+  function localGuess(text){
+    const t = text.replace(/臺/g,"台");
+    const g = {city:"", cuisine:"", type:""};
+    const tw = TW.find(c => t.includes(c)) || TW.find(c => t.includes(c.slice(0,2)));
+    if (tw) g.city = tw;
+    else { const a = ABROAD.find(([k]) => t.includes(k)); if (a) g.city = a[1]; }
+    const c = CUISINE_KW.find(([,re]) => re.test(t)); if (c) g.cuisine = c[0];
+    const ty = TYPE_KW.find(([,re]) => re.test(t)); if (ty) g.type = ty[0];
+    return g;
+  }
+  function applyLocal(text){
+    const g = localGuess(text);
+    if (g.city && !$("fCity").value.trim()) $("fCity").value = g.city;
+    if (g.cuisine && !$("fCuisine").value.trim()) $("fCuisine").value = g.cuisine;
+    if (g.type && !getType()) setType(g.type);
+  }
+  function missingFields(){
+    const m = [];
+    if (!$("fCity").value.trim()) m.push("縣市");
+    if (!$("fCuisine").value.trim()) m.push("國家／地區");
+    if (!getType()) m.push("類型");
+    return m;
+  }
+
+  async function runDetect({raw, url, parsed}){
+    ctl?.abort(); ctl = new AbortController();
+    $("detectBtn").disabled = true; $("saveBtn").disabled = true;
+    setStatus("辨識中，約需 10–30 秒…");
+    const prompt =
+`你是協助整理 Google 地圖餐廳收藏的助手。根據以下資料判斷這家店的資訊。
+
+使用者貼上的內容：
+${raw.slice(0,2000)}
+
+從網址解析到的店名：${parsed.name || "（無）"}
+座標：${parsed.lat != null ? parsed.lat + ", " + parsed.lng : "（無）"}
+
+請只回覆一個 JSON 物件，格式：
+{"name":"店名","city":"縣市","type":"日常吃|點心|餐廳","cuisine":"料理國家/地區"}
+
+規則：
+- name：店家正式名稱，保留原文（可含分店名）。
+- city：用繁體中文。台灣請寫到縣市層級，例如「台北市」「新北市」「台中市」「花蓮縣」；國外寫城市，例如「東京」「首爾」。依序參考：貼上內容裡的地址、郵遞區號、區名或路名 → 座標 → 你對這家店（或連鎖店總店）的了解 → 店名裡的地名。盡量給出答案，真的毫無線索才給空字串。
+- type 只能是三選一：「日常吃」＝便當、麵店、小吃、早餐、平價快餐等日常解決一餐；「點心」＝甜點、咖啡廳、飲料、麵包、冰品、下午茶；「餐廳」＝正式餐廳、聚餐、約會、較有質感或價位較高的店。
+- cuisine：用簡短中文，例如「台式」「日式」「韓式」「義式」「美式」「泰式」「港式」「中式」「法式」。從店名的字詞推斷（拉麵、壽司→日式；牛肉麵、滷肉飯→台式；pizza、pasta→義式；日文店名多半是日式），咖啡甜點若無明顯國別可寫「西式」。一定要給出最可能的答案，不要留空。
+- 不確定時也給最可能的答案，不要加任何說明文字。`;
+    try{
+      const r = await sample.json(prompt, {signal:ctl.signal});
+      if (r && typeof r === "object"){
+        if (r.name && !$("fName").value.trim()) $("fName").value = String(r.name);
+        else if (r.name && parsed.name === "" ) $("fName").value = String(r.name);
+        if (r.city) $("fCity").value = String(r.city);
+        if (r.cuisine) $("fCuisine").value = String(r.cuisine);
+        if (TYPES.includes(r.type)) setType(r.type);
+      }
+      applyLocal(raw + " " + $("fName").value);
+      const miss = missingFields();
+      if (miss.length){
+        setStatus("辨識不到" + miss.join("、") + "，請手動補上。貼上含地址的分享文字，準確度會比較高。", true);
+      } else setStatus("已自動填入，有不對的地方可以直接改。");
+      showRedetect(false);
+    }catch(e){
+      if (e.code === "cancelled") return;
+      if (e.code === "not_granted"){ sample = null; $("aiHint").textContent = "自動辨識未啟用，請手動填寫"; setStatus("未允許自動辨識，請手動填寫欄位。", true); }
+      else if (e.code === "rate_limited") setStatus("辨識太頻繁了，稍等一下再試，或先手動填寫。", true);
+      else setStatus("辨識失敗，請手動填寫，或稍後按「重新辨識」。", true), showRedetect(true);
+    }finally{
+      $("detectBtn").disabled = false; $("saveBtn").disabled = false;
+    }
+  }
+
+  /* ---------- save / edit / delete ---------- */
+  $("saveBtn").onclick = async () => {
+    const name = $("fName").value.trim();
+    if (!name){ setStatus("請填入店名。", true); $("fName").focus(); return; }
+    const prev = editingId ? items.find(x=>x.id===editingId) : null;
+    const it = {
+      id: editingId || ("p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+      name,
+      city: $("fCity").value.trim(),
+      cuisine: $("fCuisine").value.trim(),
+      type: getType(),
+      note: $("fNote").value.trim(),
+      visit: getVisit(),
+      url: $("fUrl").value.trim(),
+      lat: prev ? (prev.lat ?? null) : current.lat,
+      lng: prev ? (prev.lng ?? null) : current.lng,
+      createdAt: prev ? prev.createdAt : Date.now()
+    };
+    $("saveBtn").disabled = true;
+    try{
+      await (store||lsStore).save(it);
+      $("pasteBox").value = "";
+      closeForm();
+    }catch(e){
+      setStatus("儲存失敗，請確認這個帳號有編輯權限，或稍後再試。", true);
+    }finally{ $("saveBtn").disabled = false; }
+  };
+
+  $("list").addEventListener("click", async e => {
+    const b = e.target.closest("button[data-act]"); if (!b) return;
+    const id = b.dataset.id; const it = items.find(x=>x.id===id); if (!it) return;
+    if (b.dataset.act === "edit"){
+      editingId = id;
+      openForm(it, "編輯店家");
+      setStatus("");
+      $("form").scrollIntoView({behavior:"smooth", block:"start"});
+    } else if (b.dataset.act === "toggle"){
+      const next = {...it, visit: (it.visit === "去過") ? "想去" : "去過"};
+      try{ await (store||lsStore).save(next); }catch(err){ alert("更新失敗，請再試一次。"); }
+    } else if (b.dataset.act === "del"){
+      if (confirm("刪除「" + it.name + "」？")){
+        try{ await (store||lsStore).remove(id); if (editingId===id) closeForm(); }catch(err){ alert("刪除失敗，請再試一次。"); }
+      }
+    }
+  });
+
+  /* ---------- filters & render ---------- */
+  $("typeChips").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filterType = b.dataset.v;
+    $("typeChips").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
+    render();
+  });
+  $("visitChips").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filterVisit = b.dataset.v;
+    $("visitChips").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
+    render();
+  });
+  let view = "table";
+  try{ view = localStorage.getItem("foodmap.view") || "table"; }catch(e){}
+  function syncView(){ $("viewSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v===view))); }
+  syncView();
+  $("viewSeg").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    view = b.dataset.v; try{ localStorage.setItem("foodmap.view", view); }catch(err){}
+    syncView(); render();
+  });
+
+  $("exportBtn").onclick = () => {
+    const data = JSON.stringify({app:"foodmap", version:1, items}, null, 2);
+    const done = () => alert("備份內容已複製。貼到記事本或雲端硬碟存起來，之後可用「匯入備份」還原。");
+    const fallback = () => { const w = prompt("複製以下備份內容：", data); };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(data).then(done, fallback); else fallback();
+  };
+  $("importBtn").onclick = () => {
+    const text = prompt("貼上備份內容（或按取消改選檔案）：");
+    if (text === null){ $("importFile").click(); return; }
+    importText(text);
+  };
+  $("importFile").onchange = async e => {
+    const f = e.target.files?.[0]; if (!f) return;
+    importText(await f.text()); e.target.value = "";
+  };
+  async function importText(text){
+    let arr;
+    try{ const d = JSON.parse(text); arr = Array.isArray(d) ? d : d.items; if (!Array.isArray(arr)) throw 0; }
+    catch(e){ alert("備份格式不正確。"); return; }
+    const have = new Set(items.map(x => x.id));
+    let n = 0;
+    for (const it of arr){
+      if (!it || !it.name) continue;
+      const rec = {...it, id: it.id && !have.has(it.id) ? String(it.id) : ("p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6))};
+      if (items.some(x => x.name === rec.name && (x.url||"") === (rec.url||""))) continue;
+      try{ await (store||lsStore).save(rec); n++; }catch(e){}
+    }
+    alert("匯入完成，新增 " + n + " 家。");
+  }
+
+  ["q","fCityFilter","fCuisineFilter"].forEach(id => $(id).addEventListener("input", render));
+
+  function fillSelect(sel, values, allLabel){
+    const cur = sel.value;
+    sel.innerHTML = "";
+    const o0 = document.createElement("option"); o0.value=""; o0.textContent=allLabel; sel.append(o0);
+    values.forEach(v => { const o=document.createElement("option"); o.value=v; o.textContent=v; sel.append(o); });
+    sel.value = values.includes(cur) ? cur : "";
+  }
+
+  function render(){
+    const uniq = k => [...new Set(items.map(x=>x[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"zh-Hant"));
+    const cities = uniq("city"), cuisines = uniq("cuisine");
+    fillSelect($("fCityFilter"), cities, "全部縣市");
+    fillSelect($("fCuisineFilter"), cuisines, "全部料理");
+    $("cityList").innerHTML = "";
+    cities.forEach(c => { const o=document.createElement("option"); o.value=c; $("cityList").append(o); });
+
+    const q = $("q").value.trim().toLowerCase();
+    const fc = $("fCityFilter").value, fk = $("fCuisineFilter").value;
+    const shown = items.filter(x =>
+      (!filterType || x.type===filterType) &&
+      (!filterVisit || (x.visit||"想去")===filterVisit) &&
+      (!fc || x.city===fc) && (!fk || x.cuisine===fk) &&
+      (!q || (x.name+" "+(x.note||"")).toLowerCase().includes(q)));
+
+    $("count").textContent = items.length ? (shown.length===items.length ? items.length+" 家" : shown.length+" / "+items.length+" 家") : "";
+    const box = $("list"); box.innerHTML = "";
+    const empty = t => { const d = document.createElement("div"); d.className = "empty"; d.textContent = t; box.append(d); };
+    if (!items.length) return empty("還沒有收藏。複製店家連結，貼到上面就能開始。");
+    if (!shown.length) return empty("沒有符合條件的店，試試放寬篩選。");
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const opsFor = (x, vis) => {
+      const f = document.createDocumentFragment();
+      const a = el("a", "", "開地圖"); a.href = mapLink(x); a.target = "_blank"; a.rel = "noopener"; f.append(a);
+      const tg = el("button", "", vis==="去過" ? "改回想去" : "標記去過"); tg.dataset.act="toggle"; tg.dataset.id=x.id; f.append(tg);
+      const ed = el("button", "", "編輯"); ed.dataset.act="edit"; ed.dataset.id=x.id; f.append(ed);
+      const dl = el("button", "", "刪除"); dl.dataset.act="del"; dl.dataset.id=x.id; dl.style.color="var(--danger)"; f.append(dl);
+      return f;
+    };
+
+    if (view === "table"){
+      const wrap = el("div", "tablewrap");
+      const tb = el("table");
+      const head = el("tr");
+      ["店名","狀態","類型","縣市","國家／地區","備註",""].forEach(h => head.append(el("th", "", h)));
+      const thead = el("thead"); thead.append(head); tb.append(thead);
+      const tbody = el("tbody");
+      for (const x of shown){
+        const vis = x.visit || "想去";
+        const tr = el("tr", vis==="去過" ? "been" : "");
+        tr.append(el("td","nm",x.name));
+        const tdv = el("td"); tdv.append(el("span","tag visit-"+vis,vis)); tr.append(tdv);
+        const tdt = el("td"); if (x.type) tdt.append(el("span","tag type-"+x.type,x.type)); tr.append(tdt);
+        tr.append(el("td","",x.city||"—"));
+        tr.append(el("td","",x.cuisine||"—"));
+        tr.append(el("td","nt",x.note||""));
+        const op = el("td","op"); op.append(opsFor(x, vis)); tr.append(op);
+        tbody.append(tr);
+      }
+      tb.append(tbody); wrap.append(tb); box.append(wrap);
+      return;
+    }
+
+    const ul = el("ul", "list");
+    for (const x of shown){
+      const vis = x.visit || "想去";
+      const li = el("li", "item" + (vis==="去過" ? " been" : ""));
+      const dot = el("span", "dot " + (x.type||"")); if(!x.type) dot.style.background="var(--line)";
+      const body = el("div","body");
+      const meta = el("div","meta");
+      meta.append(el("span","tag visit-"+vis,vis));
+      if (x.type) meta.append(el("span","tag type-"+x.type,x.type));
+      [x.city, x.cuisine].filter(Boolean).forEach(v => meta.append(el("span","tag",v)));
+      body.append(el("div","name",x.name), meta);
+      if (x.note) body.append(el("div","note",x.note));
+      const ops = el("div","ops"); ops.append(opsFor(x, vis));
+      li.append(dot, body, ops); ul.append(li);
+    }
+    box.append(ul);
+  }
+  render();
+  initSample();
+  initStore();
+})();
+</script>
+</body>
+</html>
